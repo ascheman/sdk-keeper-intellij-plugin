@@ -9,8 +9,11 @@
 - Default SDK and language level for new projects
 - Notifications about newer releases of the managed lines, with one-click installation via SDKMAN
 - `.sdkmanrc` check on project open with updates to the latest release of the line or the latest LTS line
-- Cleanup keeps JDKs outside SDKMAN by default; "Never remove" list, *Restore and keep* action, and
-  managed SDKs deleted by the user are not re-created
+- Cleanup of other SDKs is experimental and off by default, since settings that name a removed SDK
+  break; it keeps JDKs outside SDKMAN unless asked to; "Never remove" list, *Restore and keep*
+  action, and managed SDKs deleted by the user are not re-created
+- Experimental: choose from JDKs outside SDKMAN (Homebrew, system and IDE-downloaded JDKs), which
+  are never removed
 - Projects are never moved to another Java version without asking; a dead SDK that is still
   selected stays, with a warning and a *Switch to* action
 - Early access: pinned builds in `.sdkmanrc` get newer builds and the release; existing early-access

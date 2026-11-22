@@ -40,14 +40,20 @@ separate opt-in.
 - **One SDK per Java version.** For each managed major (default: all LTS versions, as published by
   the [foojay Disco API](https://api.foojay.io)) there is exactly one Java SDK, named by its major
   (`8`, `11`, `17`, `21`, `25`), pointing to the newest installed SDKMAN patch release.
-- **Cleanup that respects your choices.** Other Java SDKs under SDKMAN are removed, also if their
-  home no longer exists; JDKs elsewhere (JBang, Gradle, manual installations, unplugged disks) stay
-  unless you opt in. Open projects and modules using a removed SDK only move within the same Java
+- **Cleanup that respects your choices (experimental, off by default).** Settings that name a
+  removed SDK break: closed projects, the Gradle JVM, Maven's runner and run configurations are not
+  updated. If you opt in, other Java SDKs under SDKMAN are removed, also if their home no longer
+  exists; JDKs elsewhere (JBang, Gradle, manual installations, unplugged disks) stay unless you opt
+  in to that as well. Open projects and modules using a removed SDK only move within the same Java
   version. Without an SDK of that version the project is left alone: the SDK stays, and if it no
   longer exists a warning names the project and offers to switch. If another component adds a Java
   SDK later, the plugin cleans up again. The notification offers *Restore and keep* for anything
   you want to retain, names on the "Never remove" list and existing early-access JDKs always stay,
   and a managed SDK you delete yourself is not re-created.
+- **JDKs outside SDKMAN (experimental, off by default).** Homebrew's `openjdk*` formulae,
+  `/Library/Java/JavaVirtualMachines`, `/usr/lib/jvm` and JDKs downloaded by the IDE can be chosen
+  as well. Version and vendor come from the JDK's `release` file (`brew` for Homebrew builds), so
+  add their vendor to the vendor preference to use them. They are never removed.
 - **Defaults for new projects.** "Settings for New Projects" use the newest managed version and its
   language level.
 - **Update notifications.** When SDKMAN offers a newer release of a managed line (same major,
@@ -70,7 +76,8 @@ Syncs run on startup, hourly, after settings changes and via *Tools | Sync JDKs 
 | Managed versions | empty = all LTS versions; or e.g. `17, 21, 25` |
 | Vendor preference | `tem, zulu, amzn` (SDKMAN vendor suffixes) |
 | Keep one Java SDK per managed version | on |
-| Remove other Java SDKs under SDKMAN, including dead ones | on |
+| Also choose from JDKs outside SDKMAN (experimental) | off |
+| Remove other Java SDKs under SDKMAN, including dead ones (experimental) | off |
 | Also remove Java SDKs outside SDKMAN | off |
 | Never remove | empty; comma-separated SDK names |
 | Do not re-create | filled automatically when you delete a managed SDK |
@@ -130,8 +137,8 @@ missing. CI runs it weekly on Linux and macOS, so changes on SDKMAN's side show 
 - Maven runner JRE / Gradle JVM defaults
 - Gradle toolchain configuration (`org.gradle.java.installations.paths`)
 - Other SDKMAN candidates (Maven, Gradle, Groovy, ...): IDE settings and `.sdkmanrc` checks
-- Other JDK sources besides SDKMAN, selectable per source: Homebrew,
-  `/Library/Java/JavaVirtualMachines`, JDKs downloaded by the IDE
+- Safer cleanup: update Gradle JVM, Maven settings and run configurations, or keep SDKs they use
+- JDKs outside SDKMAN: per-source selection, Windows locations
 - Follow the native SDKMAN CLI: a stable, machine-readable interface instead of the directory layout
 - LTS versions from the SDKMAN State API instead of foojay, once it publishes them
 - Recover from interrupted SDKMAN downloads (a leftover partial download blocks every retry)

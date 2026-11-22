@@ -14,7 +14,7 @@ class SyncSettingsConfigurable : BoundConfigurable("SDK Keeper") {
     private val options get() = SyncSettings.get().state
 
     override fun createPanel(): DialogPanel = panel {
-        group("SDKMAN") {
+        group("JDK Sources") {
             row("SDKMAN directory:") {
                 textField().bindText({ options.sdkmanDir.orEmpty() }, { options.sdkmanDir = it })
                     .align(AlignX.FILL)
@@ -28,6 +28,15 @@ class SyncSettingsConfigurable : BoundConfigurable("SDK Keeper") {
                 textField().bindText({ options.vendorPreference.orEmpty() }, { options.vendorPreference = it })
                     .comment("SDKMAN vendor suffixes in order of preference, e.g. tem, zulu, amzn")
             }
+            row {
+                checkBox("Also choose from JDKs outside SDKMAN (experimental)")
+                    .bindSelected({ options.includeOtherJdks }, { options.includeOtherJdks = it })
+                    .comment(
+                        "Homebrew, /Library/Java/JavaVirtualMachines, /usr/lib/jvm and JDKs downloaded by the IDE. " +
+                            "Their vendor comes from the JDK, e.g. <code>brew</code> for Homebrew or <code>oracle</code>: " +
+                            "add it to the vendor preference to use them. They are never removed",
+                    )
+            }
         }
         group("IDE SDK List") {
             row {
@@ -35,9 +44,12 @@ class SyncSettingsConfigurable : BoundConfigurable("SDK Keeper") {
                     .bindSelected({ options.manageSdkTable }, { options.manageSdkTable = it })
             }
             row {
-                checkBox("Remove other Java SDKs under SDKMAN, including dead ones")
+                checkBox("Remove other Java SDKs under SDKMAN, including dead ones (experimental)")
                     .bindSelected({ options.pruneUnmanaged }, { options.pruneUnmanaged = it })
-                    .comment("Open projects only move within the same Java version; an SDK they still need otherwise stays")
+                    .comment(
+                        "Settings that name a removed SDK break: closed projects, Gradle JVM, Maven runner, run configurations. " +
+                            "Open projects only move within the same Java version",
+                    )
             }
             indent {
                 row {

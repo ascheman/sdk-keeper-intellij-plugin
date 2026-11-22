@@ -32,8 +32,10 @@ import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
 import net.aschemann.sdkmanjdksync.core.JavaVersionId
+import net.aschemann.sdkmanjdksync.core.JdkRelease
 import net.aschemann.sdkmanjdksync.core.Lts
 import net.aschemann.sdkmanjdksync.core.MavenToolchains
+import net.aschemann.sdkmanjdksync.core.OtherJdks
 import net.aschemann.sdkmanjdksync.core.SdkPruning
 import net.aschemann.sdkmanjdksync.core.StableLinks
 import net.aschemann.sdkmanjdksync.core.SdkmanCatalog
@@ -126,9 +128,17 @@ class JdkSyncService(private val cs: CoroutineScope) {
             return
         }
         val majors = settings.parsedMajors ?: ltsMajors()
-        val best = newestInstalledPerMajor(sdkman.installedJava(), majors, settings.vendors)
-            .mapNotNull { (major, id) -> sdkman.javaHome(id)?.let { major to (id to it.toString()) } }
+        val others = if (settings.state.includeOtherJdks) {
+            withContext(Dispatchers.IO) { OtherJdks.find(OtherJdks.defaultLocations(), sdkman.javaCandidates) }
+        } else {
+            emptyList()
+        }
+        // SDKMAN first: on equal ids, the SDKMAN installation wins
+        val homes = (sdkman.installedJava().mapNotNull { id -> sdkman.javaHome(id)?.let { id to it } } + others.map { it.id to it.home })
+            .distinctBy { it.first }
             .toMap()
+        val best = newestInstalledPerMajor(homes.keys, majors, settings.vendors)
+            .mapValues { (_, id) -> id to homes.getValue(id).toString() }
 
         val changes = mutableListOf<String>()
         var removed = emptyList<RemovedSdk>()
@@ -137,7 +147,7 @@ class JdkSyncService(private val cs: CoroutineScope) {
             changes += withContext(Dispatchers.IO) { syncOutsideIde(best, settings) }
         }
         if (settings.state.manageSdkTable && best.isNotEmpty()) {
-            val result = withContext(Dispatchers.EDT) { syncSdkTable(best, sdkman, settings) }
+            val result = withContext(Dispatchers.EDT) { syncSdkTable(best, sdkman, others.map { it.home }.toSet(), settings) }
             changes += result.changes
             removed = result.removed
             invalid = result.invalid
@@ -277,6 +287,7 @@ class JdkSyncService(private val cs: CoroutineScope) {
     private fun syncSdkTable(
         best: Map<Int, Pair<JavaVersionId, String>>,
         sdkman: SdkmanInstallation,
+        otherHomes: Set<Path>,
         settings: SyncSettings,
     ): SdkTableResult {
         val changes = mutableListOf<String>()
@@ -316,7 +327,7 @@ class JdkSyncService(private val cs: CoroutineScope) {
                     val managedSet = managed.values.toSet()
                     val keep = settings.keptSdks + excluded.map { it.toString() }
                     val unmanaged = table.allJdks.filter {
-                        it.sdkType is JavaSdk && it !in managedSet &&
+                        it.sdkType is JavaSdk && it !in managedSet && !isOtherJdk(it.homePath, otherHomes) &&
                             SdkPruning.shouldRemove(it.name, it.homePath, keep, sdkman.javaCandidates, settings.state.pruneOutsideSdkman)
                     }
                     for (sdk in unmanaged) {
@@ -370,6 +381,11 @@ class JdkSyncService(private val cs: CoroutineScope) {
         }
         return affected.map { it.name }
     }
+
+    /** JDKs found outside SDKMAN are only ever chosen, never removed. */
+    private fun isOtherJdk(home: String?, otherHomes: Set<Path>): Boolean =
+        otherHomes.isNotEmpty() && home != null &&
+            runCatching { JdkRelease.homeOf(Path.of(home))?.toRealPath() in otherHomes }.getOrDefault(false)
 
     private fun setDefaultProjectSdk(sdk: Sdk) {
         val defaultProject = ProjectManager.getInstance().defaultProject

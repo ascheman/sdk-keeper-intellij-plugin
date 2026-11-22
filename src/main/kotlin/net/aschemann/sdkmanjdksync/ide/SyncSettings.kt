@@ -24,11 +24,17 @@ class SyncSettings : SimplePersistentStateComponent<SyncSettings.Options>(Option
 
         var vendorPreference by string("tem,zulu,amzn")
 
+        /** Experimental: also choose from JDKs outside SDKMAN (Homebrew, system and IDE-downloaded JDKs); they are never removed. */
+        var includeOtherJdks by property(false)
+
         /** Keep the IDE's Java SDK list at exactly one entry per managed major. */
         var manageSdkTable by property(true)
 
-        /** Remove unmanaged Java SDKs that are dead or live under SDKMAN (open projects are remapped first). */
-        var pruneUnmanaged by property(true)
+        /**
+         * Experimental: remove unmanaged Java SDKs that are dead or live under SDKMAN (open projects are
+         * remapped first). Off by default, since settings that name a removed SDK break.
+         */
+        var pruneUnmanaged by property(false)
 
         /** Also remove existing Java SDKs outside SDKMAN (JBang, Gradle, manual installations). */
         var pruneOutsideSdkman by property(false)
