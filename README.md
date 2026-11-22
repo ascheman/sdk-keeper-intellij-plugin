@@ -63,6 +63,9 @@ separate opt-in.
   outdated, a notification offers to update it to the latest release of the same line or to the
   latest LTS line (installing it via SDKMAN if necessary). An early-access pin is offered newer
   early-access builds, and the release once there is one; other pins are never offered early access.
+  For completion while editing `.sdkmanrc`, see the
+  [SDKMAN plugin by SivaLabs](https://plugins.jetbrains.com/plugin/30654-sdkman); both plugins work
+  side by side.
 
 Syncs run on startup, hourly, after settings changes and via *Tools | Sync JDKs with SDKMAN Now*.
 
