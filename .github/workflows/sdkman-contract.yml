@@ -27,10 +27,16 @@ jobs:
           distribution: temurin
           java-version: 21
       - uses: gradle/actions/setup-gradle@v4
+      # The SDKMAN installer needs Bash 4+, macOS ships 3.2. The plugin itself keeps using
+      # /bin/bash, so the check also covers SDKMAN on the macOS system Bash.
+      - name: Install Bash 4+ for the SDKMAN installer
+        if: runner.os == 'macOS'
+        run: brew install bash
       - name: Install SDKMAN
         run: |
-          curl -fsSL "https://get.sdkman.io?rcupdate=false" | bash
-          bash -c 'source "$HOME/.sdkman/bin/sdkman-init.sh" && sdk version' | tee "$RUNNER_TEMP/sdk-version.txt"
+          if [ "$RUNNER_OS" = macOS ]; then installer_bash="$(brew --prefix)/bin/bash"; else installer_bash=bash; fi
+          curl -fsSL "https://get.sdkman.io?rcupdate=false" | "$installer_bash"
+          /bin/bash -c 'source "$HOME/.sdkman/bin/sdkman-init.sh" && sdk version' | tee "$RUNNER_TEMP/sdk-version.txt"
       - name: Check SDKMAN contract
         id: check
         env:
@@ -43,7 +49,8 @@ jobs:
           mkdir -p observations
           {
             echo "os: $RUNNER_OS"
-            grep -E '^(script|native):' "$RUNNER_TEMP/sdk-version.txt" || true
+            echo "script: $(cat "$HOME/.sdkman/var/version" 2>/dev/null || echo '?')"
+            grep -E '^native:' "$RUNNER_TEMP/sdk-version.txt" || true
             cat "$RUNNER_TEMP/observations.txt" 2>/dev/null || true
             echo "platform: $(cat "$HOME/.sdkman/var/platform" 2>/dev/null || echo "$RUNNER_OS")"
             echo "result: ${{ steps.check.outcome }}"
