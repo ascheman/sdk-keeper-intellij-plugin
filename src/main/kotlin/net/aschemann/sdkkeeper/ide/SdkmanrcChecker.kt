@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-package net.aschemann.sdkmanjdksync.ide
+package net.aschemann.sdkkeeper.ide
 
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
@@ -11,9 +11,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.project.guessProjectDir
 import com.intellij.openapi.vfs.VfsUtilCore
 import com.intellij.openapi.vfs.VirtualFile
-import net.aschemann.sdkmanjdksync.core.JavaVersionId
-import net.aschemann.sdkmanjdksync.core.Sdkmanrc
-import net.aschemann.sdkmanjdksync.core.upgradeOptions
+import net.aschemann.sdkkeeper.core.JavaVersionId
+import net.aschemann.sdkkeeper.core.Sdkmanrc
+import net.aschemann.sdkkeeper.core.upgradeOptions
 
 /** Warns about an outdated `java=` entry in the project's `.sdkmanrc` and offers to update it. */
 object SdkmanrcChecker {

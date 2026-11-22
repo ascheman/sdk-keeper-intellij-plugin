@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-package net.aschemann.sdkmanjdksync.core
+package net.aschemann.sdkkeeper.core
 
 import java.nio.file.Path
 

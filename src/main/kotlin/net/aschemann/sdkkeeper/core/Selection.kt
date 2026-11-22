@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-package net.aschemann.sdkmanjdksync.core
+package net.aschemann.sdkkeeper.core
 
 /**
  * Newest installed JDK for each requested major, taken from the most preferred vendor that has

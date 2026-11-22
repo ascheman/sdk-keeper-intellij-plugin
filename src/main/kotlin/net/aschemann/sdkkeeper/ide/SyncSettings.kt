@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-package net.aschemann.sdkmanjdksync.ide
+package net.aschemann.sdkkeeper.ide
 
 import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.components.Service
@@ -7,12 +7,12 @@ import com.intellij.openapi.components.SimplePersistentStateComponent
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.components.service
-import net.aschemann.sdkmanjdksync.core.SdkPruning
+import net.aschemann.sdkkeeper.core.SdkPruning
 import java.nio.file.Path
 import java.nio.file.Paths
 
 @Service(Service.Level.APP)
-@State(name = "SdkmanJdkSync", storages = [Storage("sdkman-jdk-sync.xml")])
+@State(name = "SdkKeeper", storages = [Storage("sdk-keeper.xml")])
 class SyncSettings : SimplePersistentStateComponent<SyncSettings.Options>(Options()) {
 
     class Options : BaseState() {

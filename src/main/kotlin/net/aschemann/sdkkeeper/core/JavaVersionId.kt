@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-package net.aschemann.sdkmanjdksync.core
+package net.aschemann.sdkkeeper.core
 
 /**
  * A SDKMAN Java identifier such as `25.0.4-tem`, `25.0.5.0+8-tem`, `8.0.402.fx-zulu`

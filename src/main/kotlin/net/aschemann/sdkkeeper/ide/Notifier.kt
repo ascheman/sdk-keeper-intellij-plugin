@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-package net.aschemann.sdkmanjdksync.ide
+package net.aschemann.sdkkeeper.ide
 
 import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationGroupManager

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-package net.aschemann.sdkmanjdksync.core
+package net.aschemann.sdkkeeper.core
 
 /** Minimal `.sdkmanrc` handling: `candidate=version` lines, `#` comments, everything else untouched. */
 object Sdkmanrc {

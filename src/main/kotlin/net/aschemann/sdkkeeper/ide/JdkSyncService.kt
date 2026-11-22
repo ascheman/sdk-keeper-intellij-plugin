@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-package net.aschemann.sdkmanjdksync.ide
+package net.aschemann.sdkkeeper.ide
 
 import com.intellij.notification.NotificationType
 import com.intellij.openapi.application.ApplicationManager
@@ -31,18 +31,18 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import kotlinx.coroutines.withContext
-import net.aschemann.sdkmanjdksync.core.JavaVersionId
-import net.aschemann.sdkmanjdksync.core.JdkRelease
-import net.aschemann.sdkmanjdksync.core.Lts
-import net.aschemann.sdkmanjdksync.core.MavenToolchains
-import net.aschemann.sdkmanjdksync.core.OtherJdks
-import net.aschemann.sdkmanjdksync.core.SdkPruning
-import net.aschemann.sdkmanjdksync.core.StableLinks
-import net.aschemann.sdkmanjdksync.core.SdkmanCatalog
-import net.aschemann.sdkmanjdksync.core.SdkmanCli
-import net.aschemann.sdkmanjdksync.core.SdkmanInstallation
-import net.aschemann.sdkmanjdksync.core.javaMajorFromVersionString
-import net.aschemann.sdkmanjdksync.core.newestInstalledPerMajor
+import net.aschemann.sdkkeeper.core.JavaVersionId
+import net.aschemann.sdkkeeper.core.JdkRelease
+import net.aschemann.sdkkeeper.core.Lts
+import net.aschemann.sdkkeeper.core.MavenToolchains
+import net.aschemann.sdkkeeper.core.OtherJdks
+import net.aschemann.sdkkeeper.core.SdkPruning
+import net.aschemann.sdkkeeper.core.StableLinks
+import net.aschemann.sdkkeeper.core.SdkmanCatalog
+import net.aschemann.sdkkeeper.core.SdkmanCli
+import net.aschemann.sdkkeeper.core.SdkmanInstallation
+import net.aschemann.sdkkeeper.core.javaMajorFromVersionString
+import net.aschemann.sdkkeeper.core.newestInstalledPerMajor
 import com.intellij.openapi.vfs.LocalFileSystem
 import java.nio.file.Files
 import java.nio.file.Path
@@ -103,7 +103,7 @@ class JdkSyncService(private val cs: CoroutineScope) {
     fun installation(): SdkmanInstallation = SdkmanInstallation.of(SyncSettings.get().state.sdkmanDir.orEmpty())
 
     suspend fun ltsMajors(): Set<Int> = withContext(Dispatchers.IO) {
-        Lts.majors(::httpGet, Path.of(PathManager.getSystemPath(), "sdkman-jdk-sync", "lts.txt"))
+        Lts.majors(::httpGet, Path.of(PathManager.getSystemPath(), "sdk-keeper", "lts.txt"))
     }
 
     /** SDKMAN's Java catalog for this platform, cached for six hours. */
@@ -133,7 +133,7 @@ class JdkSyncService(private val cs: CoroutineScope) {
         } else {
             emptyList()
         }
-        // SDKMAN first: on equal ids, the SDKMAN installation wins
+        // SDKMAN first: on equal ids, the SDKMAN installation wins.
         val homes = (sdkman.installedJava().mapNotNull { id -> sdkman.javaHome(id)?.let { id to it } } + others.map { it.id to it.home })
             .distinctBy { it.first }
             .toMap()

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-package net.aschemann.sdkmanjdksync.ide
+package net.aschemann.sdkkeeper.ide
 
 import com.intellij.openapi.actionSystem.AnAction
 import com.intellij.openapi.actionSystem.AnActionEvent
@@ -9,7 +9,7 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import kotlin.coroutines.cancellation.CancellationException
 
-class SdkmanJdkSyncStartup : ProjectActivity {
+class SdkKeeperStartup : ProjectActivity {
     /** A failure here must never get in the way of opening the project, so it is only logged. */
     override suspend fun execute(project: Project) {
         try {

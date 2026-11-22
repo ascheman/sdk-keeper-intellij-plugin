@@ -26,14 +26,14 @@
     <depends>com.intellij.java</depends>
 
     <extensions defaultExtensionNs="com.intellij">
-        <postStartupActivity implementation="net.aschemann.sdkmanjdksync.ide.SdkmanJdkSyncStartup"/>
-        <applicationConfigurable parentId="tools" instance="net.aschemann.sdkmanjdksync.ide.SyncSettingsConfigurable"
+        <postStartupActivity implementation="net.aschemann.sdkkeeper.ide.SdkKeeperStartup"/>
+        <applicationConfigurable parentId="tools" instance="net.aschemann.sdkkeeper.ide.SyncSettingsConfigurable"
                                  id="net.aschemann.sdk-keeper" displayName="SDK Keeper"/>
         <notificationGroup id="SDK Keeper" displayType="BALLOON"/>
     </extensions>
 
     <actions>
-        <action id="net.aschemann.sdkmanjdksync.SyncNow" class="net.aschemann.sdkmanjdksync.ide.SyncNowAction"
+        <action id="net.aschemann.sdkkeeper.SyncNow" class="net.aschemann.sdkkeeper.ide.SyncNowAction"
                 text="Sync JDKs with SDKMAN Now" description="Synchronize the Java SDK list with SDKMAN">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
