@@ -20,6 +20,8 @@
   SDKs are not removed; builds rank below the release of the same version
 - JDKs are recognized by their `release` file: aborted installations are ignored, and early-access
   JDKs are kept wherever they live
+- JDKs built for another architecture (Intel JDKs on Apple silicon, which need Rosetta) are never
+  chosen
 - Installations are confirmed via `sdk home`
 - Stable per-major symlinks (`~/.jdks-lts/<major>`) for tools outside the IDE
 - Optional updates of Maven's `toolchains.xml` (only `jdkHome` of matching JDK toolchains)

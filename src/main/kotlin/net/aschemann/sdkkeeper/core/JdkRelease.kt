@@ -22,8 +22,22 @@ data class JdkRelease(val properties: Map<String, String>) {
     val earlyAccess: Boolean
         get() = properties["JAVA_RUNTIME_VERSION"]?.let { EARLY_ACCESS.containsMatchIn(it) } == true
 
+    /**
+     * Whether this JDK runs natively on [osArch] (`os.arch` of the IDE). An Intel JDK on Apple silicon
+     * only runs under Rosetta, which macOS 28 drops. JDKs without `OS_ARCH` are assumed to fit.
+     */
+    fun runsNativelyOn(osArch: String): Boolean =
+        properties["OS_ARCH"]?.let { normalizedArch(it) == normalizedArch(osArch) } ?: true
+
     companion object {
         private val EARLY_ACCESS = Regex("""-(ea|beta)\b""")
+
+        private fun normalizedArch(arch: String): String =
+            when (val a = arch.trim().lowercase()) {
+                "amd64", "x64" -> "x86_64"
+                "arm64" -> "aarch64"
+                else -> a
+            }
 
         fun parse(text: String): JdkRelease =
             JdkRelease(

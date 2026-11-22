@@ -133,8 +133,11 @@ class JdkSyncService(private val cs: CoroutineScope) {
         } else {
             emptyList()
         }
-        // SDKMAN first: on equal ids, the SDKMAN installation wins.
+        // SDKMAN first: on equal ids, the SDKMAN installation wins. JDKs for another architecture
+        // (Intel JDKs on Apple silicon) are never chosen.
+        val osArch = System.getProperty("os.arch")
         val homes = (sdkman.installedJava().mapNotNull { id -> sdkman.javaHome(id)?.let { id to it } } + others.map { it.id to it.home })
+            .filter { (_, home) -> JdkRelease.of(home)?.runsNativelyOn(osArch) != false }
             .distinctBy { it.first }
             .toMap()
         val best = newestInstalledPerMajor(homes.keys, majors, settings.vendors)

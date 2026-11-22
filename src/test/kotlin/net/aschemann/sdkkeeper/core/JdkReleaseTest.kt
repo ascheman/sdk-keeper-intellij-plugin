@@ -57,4 +57,12 @@ class JdkReleaseTest {
         assertNull(JdkRelease.homeOf(empty))
         assertNull(JdkRelease.of(tmp.resolve("missing")))
     }
+
+    @Test
+    fun `checks the architecture`() {
+        assertTrue(JdkRelease.parse("OS_ARCH=\"aarch64\"").runsNativelyOn("aarch64"))
+        assertTrue(JdkRelease.parse("OS_ARCH=\"x86_64\"").runsNativelyOn("amd64"))
+        assertFalse(JdkRelease.parse("OS_ARCH=\"x86_64\"").runsNativelyOn("aarch64"))
+        assertTrue(JdkRelease.parse("JAVA_VERSION=\"21\"").runsNativelyOn("aarch64"))
+    }
 }
