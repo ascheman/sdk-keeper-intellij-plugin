@@ -144,5 +144,6 @@ CI runs it weekly on Linux and macOS, so changes on SDKMAN's side show up as a f
 
 ## License
 
-[Apache License 2.0](LICENSE).
+Copyright 2026 Gerd Aschemann.
+Licensed under the [Apache License 2.0](LICENSE).
 SDKMAN! is a separate project by its own maintainers; SDK Keeper uses it but is not affiliated with it.

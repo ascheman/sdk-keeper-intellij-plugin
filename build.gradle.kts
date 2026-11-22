@@ -80,3 +80,7 @@ val contractTest by tasks.registering(Test::class) {
     }
     outputs.upToDateWhen { false }
 }
+
+tasks.jar {
+    from(files("LICENSE", "NOTICE")) { into("META-INF") }
+}
