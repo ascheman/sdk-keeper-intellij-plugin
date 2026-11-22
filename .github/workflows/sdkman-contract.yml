@@ -64,7 +64,7 @@ jobs:
       actions: write
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v5
+      - uses: actions/download-artifact@v8
         with:
           pattern: contract-*
           merge-multiple: true
