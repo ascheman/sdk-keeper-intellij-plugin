@@ -1,15 +1,19 @@
 // SPDX-License-Identifier: Apache-2.0
 package net.aschemann.sdkkeeper.ide
 
+import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.components.BaseState
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.SimplePersistentStateComponent
 import com.intellij.openapi.components.State
 import com.intellij.openapi.components.Storage
 import com.intellij.openapi.components.service
+import com.intellij.openapi.util.JDOMUtil
+import com.intellij.util.xmlb.XmlSerializer
 import net.aschemann.sdkkeeper.core.SdkPruning
 import java.nio.file.Path
 import java.nio.file.Paths
+import kotlin.io.path.isRegularFile
 
 @Service(Service.Level.APP)
 @State(name = "SdkKeeper", storages = [Storage("sdk-keeper.xml")])
@@ -79,6 +83,11 @@ class SyncSettings : SimplePersistentStateComponent<SyncSettings.Options>(Option
         var notifiedUpdates by string("")
     }
 
+    /** Takes over the settings stored before the rename (`sdkman-jdk-sync.xml`), if there are no new ones yet. */
+    override fun noStateLoaded() {
+        readLegacy(Path.of(PathManager.getOptionsPath(), LEGACY_FILE))?.let { loadState(it) }
+    }
+
     val parsedMajors: Set<Int>?
         get() = state.majors.orEmpty().split(',', ' ').mapNotNull { it.trim().toIntOrNull() }.toSortedSet().ifEmpty { null }
 
@@ -104,7 +113,20 @@ class SyncSettings : SimplePersistentStateComponent<SyncSettings.Options>(Option
         get() = expandHome(state.toolchainsFile).ifBlank { "~/.m2/toolchains.xml" }.let { Paths.get(expandHome(it)) }
 
     companion object {
+        private const val LEGACY_FILE = "sdkman-jdk-sync.xml"
+        private const val LEGACY_NAME = "SdkmanJdkSync"
+
         fun get(): SyncSettings = service()
+
+        internal fun readLegacy(file: Path): Options? =
+            if (!file.isRegularFile()) {
+                null
+            } else {
+                runCatching {
+                    JDOMUtil.load(file).getChildren("component").firstOrNull { it.getAttributeValue("name") == LEGACY_NAME }
+                        ?.let { XmlSerializer.deserialize(it, Options::class.java) }
+                }.getOrNull()
+            }
 
         private fun expandHome(path: String?): String =
             path.orEmpty().trim().let { if (it.startsWith("~")) System.getProperty("user.home") + it.substring(1) else it }
