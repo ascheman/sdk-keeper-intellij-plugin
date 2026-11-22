@@ -1,4 +1,5 @@
 import org.jetbrains.intellij.platform.gradle.IntelliJPlatformType
+import org.jetbrains.intellij.platform.gradle.models.ProductRelease
 
 plugins {
     id("java")
@@ -49,7 +50,16 @@ intellijPlatform {
     }
     pluginVerification {
         ides {
-            recommended()
+            if (providers.gradleProperty("verifyEap").isPresent) {
+                // the newest EAP of every branch since sinceBuild, to see breaking changes before they ship
+                select {
+                    types = listOf(IntelliJPlatformType.IntellijIdeaUltimate)
+                    channels = listOf(ProductRelease.Channel.EAP)
+                    sinceBuild = providers.gradleProperty("pluginSinceBuild")
+                }
+            } else {
+                recommended()
+            }
         }
     }
 }

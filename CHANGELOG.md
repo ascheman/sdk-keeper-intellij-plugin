@@ -21,3 +21,4 @@
 - Stable per-major symlinks (`~/.jdks-lts/<major>`) for tools outside the IDE
 - Optional updates of Maven's `toolchains.xml` (only `jdkHome` of matching JDK toolchains)
 - Settings page and *Tools | Sync SDKMAN JDKs Now*
+- Failures on project startup are only logged and never get in the way of opening a project

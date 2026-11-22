@@ -86,6 +86,22 @@ Syncs run on startup, hourly, after settings changes and via *Tools | Sync SDKMA
 - IntelliJ IDEA 2026.3 or later (Community or Ultimate)
 - SDKMAN! on macOS or Linux (installation uses `bash` and `sdkman-init.sh`)
 
+## Troubleshooting
+
+If the IDE misbehaves after installing or updating the plugin:
+
+- Disable it under *Settings | Plugins*. If the IDE does not start, add the plugin ID
+  `net.aschemann.sync-sdkman` as a line to `disabled_plugins.txt` in the IDE's configuration
+  directory (macOS: `~/Library/Application Support/JetBrains/<product><version>/`, Linux:
+  `~/.config/JetBrains/<product><version>/`).
+- Or start the IDE once without any third-party plugins: `idea disableNonBundledPlugins`.
+- Changes outside the IDE are easy to undo: `~/.jdks-lts` only contains symlinks, and the
+  previous `~/.m2/toolchains.xml` is kept as `toolchains.xml.bak`. The plugin never deletes JDKs.
+
+Errors during a sync or on project startup are written to `idea.log` (*Help | Show Log*), they
+never block the IDE. CI verifies the plugin against current IDE releases and, weekly, against the
+newest EAP.
+
 ## Building
 
 ```shell
