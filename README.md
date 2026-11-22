@@ -103,6 +103,11 @@ The plugin ZIP ends up in `build/distributions/`; install it via
 The `core` package has no IntelliJ dependencies and is covered by plain JUnit 5 tests
 (`./gradlew test`).
 
+`SDKMAN_CONTRACT=true ./gradlew contractTest` checks the real SDKMAN CLI and the SDKMAN and
+foojay APIs the plugin relies on. It installs the newest Temurin LTS into `$SDKMAN_DIR` if it is
+missing. CI runs it weekly on Linux and macOS, so changes on SDKMAN's side show up as a failed run;
+[CONTRACT.md](CONTRACT.md) records what changed and when.
+
 ## Roadmap
 
 - Remove superseded patch releases from SDKMAN after an update (opt-in)

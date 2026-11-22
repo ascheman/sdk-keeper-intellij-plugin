@@ -55,5 +55,18 @@ intellijPlatform {
 }
 
 tasks.test {
-    useJUnitPlatform()
+    useJUnitPlatform {
+        excludeTags("contract")
+    }
+}
+
+val contractTest by tasks.registering(Test::class) {
+    description = "Checks the real SDKMAN CLI and APIs; installs a JDK, so it needs SDKMAN_CONTRACT=true."
+    group = "verification"
+    testClassesDirs = tasks.test.get().testClassesDirs
+    classpath = tasks.test.get().classpath
+    useJUnitPlatform {
+        includeTags("contract")
+    }
+    outputs.upToDateWhen { false }
 }

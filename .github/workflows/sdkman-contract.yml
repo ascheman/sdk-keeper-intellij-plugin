@@ -1,0 +1,87 @@
+name: SDKMAN contract
+
+# Weekly check against a fresh SDKMAN installation and the live SDKMAN/foojay APIs,
+# so that changes on their side (e.g. the native CLI) show up as a failed run.
+# Changes in what it sees are recorded in CONTRACT.md.
+on:
+  schedule:
+    - cron: '17 5 * * 1'
+  workflow_dispatch:
+
+concurrency: sdkman-contract
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: 21
+      - uses: gradle/actions/setup-gradle@v4
+      - name: Install SDKMAN
+        run: |
+          curl -fsSL "https://get.sdkman.io?rcupdate=false" | bash
+          bash -c 'source "$HOME/.sdkman/bin/sdkman-init.sh" && sdk version' | tee "$RUNNER_TEMP/sdk-version.txt"
+      - name: Check SDKMAN contract
+        id: check
+        env:
+          SDKMAN_CONTRACT: 'true'
+          CONTRACT_OBSERVATIONS: ${{ runner.temp }}/observations.txt
+        run: ./gradlew contractTest
+      - name: Collect observations
+        if: always()
+        run: |
+          mkdir -p observations
+          {
+            echo "os: $RUNNER_OS"
+            grep -E '^(script|native):' "$RUNNER_TEMP/sdk-version.txt" || true
+            cat "$RUNNER_TEMP/observations.txt" 2>/dev/null || true
+            echo "platform: $(cat "$HOME/.sdkman/var/platform" 2>/dev/null || echo "$RUNNER_OS")"
+            echo "result: ${{ steps.check.outcome }}"
+          } > "observations/$RUNNER_OS.txt"
+          cat "observations/$RUNNER_OS.txt"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: contract-${{ runner.os }}
+          path: observations/
+
+  record:
+    needs: contract
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/download-artifact@v5
+        with:
+          pattern: contract-*
+          merge-multiple: true
+          path: observations
+      - name: Record changes in CONTRACT.md
+        run: |
+          python3 .github/contract/record.py observations CONTRACT.md
+          git add CONTRACT.md
+          if ! git diff --cached --quiet; then
+            git config user.name 'github-actions[bot]'
+            git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+            git commit -m 'Record SDKMAN contract changes'
+            git pull --rebase
+            git push
+          fi
+      # Scheduled workflows are disabled after 60 days without repository activity.
+      - name: Keep the schedule alive
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/sdkman-contract.yml/enable"
