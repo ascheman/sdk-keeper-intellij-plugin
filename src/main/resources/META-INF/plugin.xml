@@ -22,6 +22,12 @@
     Works with SDKMAN!, not affiliated with the SDKMAN! project.
     ]]></description>
 
+    <change-notes><![CDATA[
+    First release: one SDK per LTS version based on SDKMAN!, update notifications, <code>.sdkmanrc</code>
+    checks, stable <code>~/.jdks-lts</code> links and optional <code>toolchains.xml</code> updates.
+    Removing other SDKs and choosing JDKs outside SDKMAN are experimental and off by default.
+    ]]></change-notes>
+
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.java</depends>
 
