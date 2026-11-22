@@ -26,7 +26,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       # The SDKMAN installer needs Bash 4+, macOS ships 3.2. The plugin itself keeps using
       # /bin/bash, so the check also covers SDKMAN on the macOS system Bash.
       - name: Install Bash 4+ for the SDKMAN installer
@@ -72,7 +72,7 @@ jobs:
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Verify against the newest IntelliJ EAP
         run: ./gradlew verifyPlugin -PverifyEap
 
