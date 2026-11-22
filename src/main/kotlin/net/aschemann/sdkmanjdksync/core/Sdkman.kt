@@ -1,12 +1,10 @@
 // SPDX-License-Identifier: Apache-2.0
 package net.aschemann.sdkmanjdksync.core
 
-import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.util.concurrent.TimeUnit
 import kotlin.io.path.isDirectory
-import kotlin.io.path.isRegularFile
 import kotlin.io.path.isSymbolicLink
 import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
@@ -23,25 +21,20 @@ class SdkmanInstallation(val dir: Path) {
     val platform: String?
         get() = runCatching { dir.resolve("var/platform").readText().trim() }.getOrNull()?.ifEmpty { null }
 
+    /** Installed versions; directories without a JDK (e.g. aborted installs) are skipped. */
     fun installedJava(): List<JavaVersionId> =
         if (!exists) {
             emptyList()
         } else {
             javaCandidates.listDirectoryEntries()
-                .filter { it.isDirectory() && !it.isSymbolicLink() }
+                .filter { it.isDirectory() && !it.isSymbolicLink() && JdkRelease.homeOf(it) != null }
                 .mapNotNull { JavaVersionId.parse(it.name) }
         }
 
     fun isInstalled(id: JavaVersionId): Boolean = javaCandidates.resolve(id.identifier).isDirectory()
 
     /** The JDK home of an installed version (handles the `zulu-8.jdk/Contents/Home` layout). */
-    fun javaHome(id: JavaVersionId): Path? {
-        val root = javaCandidates.resolve(id.identifier)
-        if (root.resolve("release").isRegularFile()) return root
-        return runCatching {
-            root.listDirectoryEntries("*.jdk").map { it.resolve("Contents/Home") }.firstOrNull { it.resolve("release").isRegularFile() }
-        }.getOrNull()
-    }
+    fun javaHome(id: JavaVersionId): Path? = JdkRelease.homeOf(javaCandidates.resolve(id.identifier))
 
     companion object {
         fun default(): SdkmanInstallation =
@@ -64,16 +57,30 @@ object SdkmanCatalog {
     fun fetch(platform: String, http: (String) -> String): List<JavaVersionId> = parse(http(url(platform)))
 }
 
-/** Runs `sdk` commands through bash, without making the installed version the default. */
+/** Runs `sdk` commands through bash; installing never makes the new version the default. */
 class SdkmanCli(private val installation: SdkmanInstallation) {
 
     data class Result(val exitCode: Int, val output: String) {
         val ok: Boolean get() = exitCode == 0
     }
 
+    /** Installs [id]; only succeeds if SDKMAN reports a [home] for it afterwards. */
     fun install(id: JavaVersionId, timeoutMinutes: Long = 30): Result {
-        val script = "source \"\$SDKMAN_DIR/bin/sdkman-init.sh\" && printf 'n\\n' | sdk install java \"\$1\""
-        val process = ProcessBuilder("/bin/bash", "-c", script, "sdk-install", id.identifier)
+        val result = run("printf 'n\\n' | sdk install java \"\$1\"", id.identifier, timeoutMinutes)
+        return if (result.ok && home(id) != null) result else Result(result.exitCode.takeIf { it != 0 } ?: 1, result.output)
+    }
+
+    /** Where SDKMAN keeps [id], as answered by `sdk home`; null if it is not installed. */
+    fun home(id: JavaVersionId): Path? {
+        val result = run("sdk home java \"\$1\"", id.identifier, 1)
+        if (!result.ok) return null
+        val line = result.output.lines().lastOrNull { it.isNotBlank() }?.trim() ?: return null
+        return runCatching { Paths.get(line) }.getOrNull()?.takeIf { it.isDirectory() }
+    }
+
+    private fun run(command: String, argument: String, timeoutMinutes: Long): Result {
+        val script = "source \"\$SDKMAN_DIR/bin/sdkman-init.sh\" && $command"
+        val process = ProcessBuilder("/bin/bash", "-c", script, "sdk", argument)
             .redirectErrorStream(true)
             .also { it.environment()["SDKMAN_DIR"] = installation.dir.toString() }
             .start()
@@ -84,7 +91,6 @@ class SdkmanCli(private val installation: SdkmanInstallation) {
             return Result(-1, output.append("timeout after $timeoutMinutes minutes").toString())
         }
         reader.join()
-        val ok = process.exitValue() == 0 && Files.isDirectory(installation.dir.resolve("candidates/java/${id.identifier}"))
-        return Result(if (ok) 0 else process.exitValue().takeIf { it != 0 } ?: 1, output.toString())
+        return Result(process.exitValue(), output.toString())
     }
 }

@@ -15,6 +15,9 @@
   selected stays, with a warning and a *Switch to* action
 - Early access: pinned builds in `.sdkmanrc` get newer builds and the release; existing early-access
   SDKs are not removed; builds rank below the release of the same version
+- JDKs are recognized by their `release` file: aborted installations are ignored, and early-access
+  JDKs are kept wherever they live
+- Installations are confirmed via `sdk home`
 - Stable per-major symlinks (`~/.jdks-lts/<major>`) for tools outside the IDE
 - Optional updates of Maven's `toolchains.xml` (only `jdkHome` of matching JDK toolchains)
 - Settings page and *Tools | Sync SDKMAN JDKs Now*

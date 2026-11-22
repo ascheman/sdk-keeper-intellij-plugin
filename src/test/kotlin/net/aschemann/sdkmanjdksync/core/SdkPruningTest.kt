@@ -10,6 +10,7 @@ import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
+import kotlin.io.path.writeText
 
 class SdkPruningTest {
 
@@ -67,6 +68,17 @@ class SdkPruningTest {
         assertFalse(remove("28-ea", ea.toString()))
         assertFalse(remove("28-ea", ea.toString(), includeOutside = true))
         assertTrue(remove("27-ea", sdkman.resolve("27.0.0.0+ea.30-open").toString()))
+    }
+
+    @Test
+    fun `recognizes early access by the release file, wherever the JDK lives`() {
+        val download = tmp.resolve("Downloads/jdk-28.jdk/Contents/Home").createDirectories()
+        download.resolve("release").writeText("JAVA_VERSION=\"28\"\nJAVA_RUNTIME_VERSION=\"28-ea+23-2104\"\n")
+        assertFalse(remove("28-ea", tmp.resolve("Downloads/jdk-28.jdk").toString(), includeOutside = true))
+
+        val renamed = sdkman.resolve("28.0.0.0+ea.23-open").createDirectories()
+        renamed.resolve("release").writeText("JAVA_VERSION=\"28\"\nJAVA_RUNTIME_VERSION=\"28+35\"\n")
+        assertTrue(remove("28", renamed.toString()))
     }
 
     @Test

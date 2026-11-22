@@ -2,8 +2,12 @@
 package net.aschemann.sdkmanjdksync.core
 
 import org.junit.jupiter.api.Assertions.assertEquals
+import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNull
+import org.junit.jupiter.api.Assertions.assertTrue
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.DisabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import java.nio.file.Files
 import java.nio.file.Path
@@ -60,12 +64,42 @@ class SdkmanTest {
         java.resolve("8.0.462-zulu/zulu-8.jdk/Contents/Home").createDirectories().resolve("release").writeText("JAVA_VERSION=\"1.8.0_462\"")
         Files.createSymbolicLink(java.resolve("current"), java.resolve("25.0.4-tem"))
         java.resolve("not-a-jdk").createDirectories()
+        java.resolve("21.0.13.0+9-tem").createDirectories()
 
         val sdkman = SdkmanInstallation(tmp)
         assertEquals(listOf("25.0.4-tem", "8.0.462-zulu"), sdkman.installedJava().map { it.identifier }.sorted())
         assertEquals(java.resolve("25.0.4-tem"), sdkman.javaHome(JavaVersionId.parse("25.0.4-tem")!!))
         assertEquals(java.resolve("8.0.462-zulu/zulu-8.jdk/Contents/Home"), sdkman.javaHome(JavaVersionId.parse("8.0.462-zulu")!!))
         assertNull(sdkman.javaHome(JavaVersionId.parse("21.0.1-tem")!!))
+    }
+
+    @Test
+    @DisabledOnOs(OS.WINDOWS)
+    fun `installs via sdk and asks sdk home where the JDK lives`(@TempDir tmp: Path) {
+        tmp.resolve("bin").createDirectories().resolve("sdkman-init.sh").writeText(
+            """
+            sdk() {
+              case "${'$'}1" in
+                install) read -r answer; [ "${'$'}answer" = n ] || return 9
+                         [ "${'$'}3" = 99.0.0-fail ] && return 1
+                         [ "${'$'}3" = 98.0.0-empty ] && return 0
+                         mkdir -p "${'$'}SDKMAN_DIR/candidates/${'$'}2/${'$'}3"; echo "Done installing!" ;;
+                home)    d="${'$'}SDKMAN_DIR/candidates/${'$'}2/${'$'}3"
+                         [ -d "${'$'}d" ] && echo "${'$'}d" || { echo "${'$'}2 ${'$'}3 is not installed on your system." >&2; return 1; } ;;
+              esac
+            }
+            """.trimIndent(),
+        )
+        val cli = SdkmanCli(SdkmanInstallation(tmp))
+        val id = JavaVersionId.parse("25.0.5.0+8-tem")!!
+
+        assertNull(cli.home(id))
+        val result = cli.install(id)
+        assertTrue(result.ok, result.output)
+        assertEquals(tmp.resolve("candidates/java/25.0.5.0+8-tem"), cli.home(id))
+
+        assertFalse(cli.install(JavaVersionId.parse("99.0.0-fail")!!).ok)
+        assertFalse(cli.install(JavaVersionId.parse("98.0.0-empty")!!).ok, "exit 0 without a home is no success")
     }
 
     @Test

@@ -19,13 +19,17 @@ object SdkPruning {
         val path = runCatching { Path.of(home) }.getOrNull() ?: return true
         val sdkmanReal = runCatching { sdkmanJava.toRealPath() }.getOrNull()
         val real = runCatching { path.toRealPath() }.getOrNull()
-        if (real != null && JavaVersionId.parse(real.fileName.toString())?.earlyAccess == true) return false
+        if (real != null && isEarlyAccess(real)) return false
         if (includeOutside) return true
         if (real != null) return sdkmanReal != null && real.startsWith(sdkmanReal)
         val absolute = path.toAbsolutePath().normalize()
         return absolute.startsWith(sdkmanJava.toAbsolutePath().normalize()) ||
             (sdkmanReal != null && absolute.startsWith(sdkmanReal))
     }
+
+    /** Asks the JDK's `release` file; without one, the SDKMAN directory name decides. */
+    private fun isEarlyAccess(home: Path): Boolean =
+        JdkRelease.of(home)?.earlyAccess ?: (JavaVersionId.parse(home.fileName.toString())?.earlyAccess == true)
 
     /** The only managed major open projects may be moved to without asking: their own. */
     fun automaticReplacement(major: Int?, managed: Set<Int>): Int? = major?.takeIf { it in managed }
