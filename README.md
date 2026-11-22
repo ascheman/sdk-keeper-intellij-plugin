@@ -1,4 +1,4 @@
-# Sync SDKMAN
+# SDK Keeper
 
 An IntelliJ IDEA plugin that keeps the IDE's Java SDK list lean and current, based on the JDKs
 installed with [SDKMAN!](https://sdkman.io).
@@ -58,11 +58,11 @@ separate opt-in.
   latest LTS line (installing it via SDKMAN if necessary). An early-access pin is offered newer
   early-access builds, and the release once there is one; other pins are never offered early access.
 
-Syncs run on startup, hourly, after settings changes and via *Tools | Sync SDKMAN JDKs Now*.
+Syncs run on startup, hourly, after settings changes and via *Tools | Sync JDKs with SDKMAN Now*.
 
 ## Settings
 
-*Settings | Tools | Sync SDKMAN*
+*Settings | Tools | SDK Keeper*
 
 | Setting | Default |
 |---|---|
@@ -91,7 +91,7 @@ Syncs run on startup, hourly, after settings changes and via *Tools | Sync SDKMA
 If the IDE misbehaves after installing or updating the plugin:
 
 - Disable it under *Settings | Plugins*. If the IDE does not start, add the plugin ID
-  `net.aschemann.sync-sdkman` as a line to `disabled_plugins.txt` in the IDE's configuration
+  `net.aschemann.sdk-keeper` as a line to `disabled_plugins.txt` in the IDE's configuration
   directory (macOS: `~/Library/Application Support/JetBrains/<product><version>/`, Linux:
   `~/.config/JetBrains/<product><version>/`).
 - Or start the IDE once without any third-party plugins: `idea disableNonBundledPlugins`.
@@ -140,4 +140,4 @@ missing. CI runs it weekly on Linux and macOS, so changes on SDKMAN's side show 
 
 ## License
 
-[Apache License 2.0](LICENSE). Not affiliated with the SDKMAN! project.
+[Apache License 2.0](LICENSE). Works with SDKMAN!, not affiliated with the SDKMAN! project.

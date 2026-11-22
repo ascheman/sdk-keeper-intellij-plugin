@@ -428,5 +428,5 @@ class JdkSyncService(private val cs: CoroutineScope) {
     }
 
     private fun httpGet(url: String): String =
-        HttpRequests.request(url).userAgent("sdkman-jdk-sync").connectTimeout(10_000).readTimeout(20_000).readString()
+        HttpRequests.request(url).userAgent("sdk-keeper").connectTimeout(10_000).readTimeout(20_000).readString()
 }

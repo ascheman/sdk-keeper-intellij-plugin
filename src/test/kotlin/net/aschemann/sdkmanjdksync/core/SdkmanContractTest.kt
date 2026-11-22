@@ -28,7 +28,7 @@ class SdkmanContractTest {
     private val http = HttpClient.newBuilder().followRedirects(HttpClient.Redirect.NORMAL).connectTimeout(Duration.ofSeconds(20)).build()
 
     private fun get(url: String): String {
-        val response = http.send(HttpRequest.newBuilder(URI(url)).header("User-Agent", "sdkman-jdk-sync").build(), HttpResponse.BodyHandlers.ofString())
+        val response = http.send(HttpRequest.newBuilder(URI(url)).header("User-Agent", "sdk-keeper").build(), HttpResponse.BodyHandlers.ofString())
         assertEquals(200, response.statusCode(), url)
         return response.body()
     }

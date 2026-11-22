@@ -1,7 +1,7 @@
 <idea-plugin>
-    <id>net.aschemann.sync-sdkman</id>
-    <name>Sync SDKMAN</name>
-    <vendor url="https://github.com/ascheman/sync-sdkman">Gerd Aschemann</vendor>
+    <id>net.aschemann.sdk-keeper</id>
+    <name>SDK Keeper</name>
+    <vendor url="https://github.com/ascheman/sdk-keeper-intellij-plugin">Gerd Aschemann</vendor>
 
     <description><![CDATA[
     Keeps IntelliJ's Java SDK list lean and current, based on the JDKs installed with
@@ -19,7 +19,7 @@
           one-click updates to the latest release of the line or the latest LTS line</li>
     </ul>
     The plugin queries the foojay Disco API (LTS versions) and the SDKMAN API (available releases).
-    Not affiliated with the SDKMAN! project.
+    Works with SDKMAN!, not affiliated with the SDKMAN! project.
     ]]></description>
 
     <depends>com.intellij.modules.platform</depends>
@@ -28,13 +28,13 @@
     <extensions defaultExtensionNs="com.intellij">
         <postStartupActivity implementation="net.aschemann.sdkmanjdksync.ide.SdkmanJdkSyncStartup"/>
         <applicationConfigurable parentId="tools" instance="net.aschemann.sdkmanjdksync.ide.SyncSettingsConfigurable"
-                                 id="net.aschemann.sync-sdkman" displayName="Sync SDKMAN"/>
-        <notificationGroup id="Sync SDKMAN" displayType="BALLOON"/>
+                                 id="net.aschemann.sdk-keeper" displayName="SDK Keeper"/>
+        <notificationGroup id="SDK Keeper" displayType="BALLOON"/>
     </extensions>
 
     <actions>
         <action id="net.aschemann.sdkmanjdksync.SyncNow" class="net.aschemann.sdkmanjdksync.ide.SyncNowAction"
-                text="Sync SDKMAN JDKs Now" description="Synchronize the Java SDK list with SDKMAN">
+                text="Sync JDKs with SDKMAN Now" description="Synchronize the Java SDK list with SDKMAN">
             <add-to-group group-id="ToolsMenu" anchor="last"/>
         </action>
     </actions>

@@ -7,7 +7,7 @@ import com.intellij.notification.NotificationType
 import com.intellij.openapi.project.Project
 
 object Notifier {
-    const val GROUP = "Sync SDKMAN"
+    const val GROUP = "SDK Keeper"
 
     fun notify(
         project: Project?,

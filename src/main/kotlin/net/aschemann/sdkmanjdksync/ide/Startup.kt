@@ -18,7 +18,7 @@ class SdkmanJdkSyncStartup : ProjectActivity {
         } catch (e: CancellationException) {
             throw e
         } catch (e: Exception) {
-            thisLogger().warn("Sync SDKMAN startup failed for ${project.name}", e)
+            thisLogger().warn("SDK Keeper startup failed for ${project.name}", e)
         }
     }
 }
