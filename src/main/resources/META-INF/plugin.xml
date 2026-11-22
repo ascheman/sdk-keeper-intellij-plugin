@@ -5,7 +5,9 @@
 
     <description><![CDATA[
     Keeps IntelliJ's Java SDK list lean and current, based on the JDKs installed with
-    <a href="https://sdkman.io">SDKMAN!</a>:
+    <a href="https://sdkman.io">SDKMAN!</a>. An independent project, not affiliated with or endorsed by
+    the SDKMAN! maintainers.
+    <br/>
     <ul>
       <li>exactly one SDK per managed Java version (default: all LTS versions, as published by foojay),
           always pointing to the newest installed patch release</li>
@@ -19,7 +21,6 @@
           one-click updates to the latest release of the line or the latest LTS line</li>
     </ul>
     The plugin queries the foojay Disco API (LTS versions) and the SDKMAN API (available releases).
-    Works with SDKMAN!, not affiliated with the SDKMAN! project.
     ]]></description>
 
     <change-notes><![CDATA[

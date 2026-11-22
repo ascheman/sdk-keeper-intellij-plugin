@@ -3,19 +3,18 @@
 Usage: record.py <directory with observation files> <CONTRACT.md>
 
 Each observation file holds `key: value` lines: `platform`, `script`, `native`, `lts`,
-`java <major>` and `result`, written by the SDKMAN contract workflow.
+`java <major>` and `result`, written by the SDKMAN compatibility workflow.
 """
 import datetime
 import sys
 from pathlib import Path
 
 LTS = ["8", "11", "17", "21", "25"]
-HEADER = """# SDKMAN contract
+HEADER = """# SDKMAN compatibility
 
-What the weekly [SDKMAN contract check](.github/workflows/sdkman-contract.yml) saw.
-A row is only added when something changed for a platform: SDKMAN version, LTS versions,
-newest releases or the result. *Newest* lists the newest release per LTS line for
-Temurin / Zulu / Corretto (`-` = none).
+What the weekly [SDKMAN compatibility check](.github/workflows/sdkman-contract.yml) saw.
+A row is only added when something changed for a platform: SDKMAN version, LTS versions, newest releases or the result.
+*Newest* lists the newest release per LTS line for Temurin / Zulu / Corretto (`-` = none).
 
 | Date | Platform | SDKMAN script | SDKMAN native | LTS (foojay) | Newest (tem / zulu / amzn) | Result |
 |---|---|---|---|---|---|---|

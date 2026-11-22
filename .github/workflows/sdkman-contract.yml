@@ -1,4 +1,4 @@
-name: SDKMAN contract
+name: SDKMAN compatibility
 
 # Weekly check against a fresh SDKMAN installation and the live SDKMAN/foojay APIs,
 # so that changes on their side (e.g. the native CLI) show up as a failed run.
