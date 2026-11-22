@@ -113,7 +113,12 @@ missing. CI runs it weekly on Linux and macOS, so changes on SDKMAN's side show 
 - Remove superseded patch releases from SDKMAN after an update (opt-in)
 - Maven runner JRE / Gradle JVM defaults
 - Gradle toolchain configuration (`org.gradle.java.installations.paths`)
-- Other `.sdkmanrc` candidates (Maven, Gradle, ...)
+- Other SDKMAN candidates (Maven, Gradle, Groovy, ...): IDE settings and `.sdkmanrc` checks
+- Other JDK sources besides SDKMAN, selectable per source: Homebrew,
+  `/Library/Java/JavaVirtualMachines`, JDKs downloaded by the IDE
+- Follow the native SDKMAN CLI: a stable, machine-readable interface instead of the directory layout
+- LTS versions from the SDKMAN State API instead of foojay, once it publishes them
+- Recover from interrupted SDKMAN downloads (a leftover partial download blocks every retry)
 - Windows support (SDKMAN via WSL/Git Bash)
 - Platform tests for the SDK table synchronization
 
