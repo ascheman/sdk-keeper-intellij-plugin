@@ -108,7 +108,7 @@ If the IDE misbehaves after installing or updating the plugin:
 
 Errors during a sync or on project startup are written to `idea.log` (*Help | Show Log*), they never block the IDE.
 If the IDE freezes or shows an error caused by SDK Keeper, please send the report from the IDE's error dialog (*Report to third-party plugin*); it reaches the plugin's author via the Marketplace.
-CI verifies the plugin against current IDE releases and, weekly, against the newest EAP.
+CI verifies the plugin against current IDE releases and, weekly, runs its tests against the newest EAP.
 
 ## Building
 
@@ -123,7 +123,9 @@ CI verifies the plugin against current IDE releases and, weekly, against the new
 The plugin ZIP ends up in `build/distributions/`; install it via *Settings | Plugins | ⚙ | Install Plugin from Disk…*.
 `./gradlew runIde` starts a sandbox IDE with the plugin.
 
-The `core` package has no IntelliJ dependencies and is covered by plain JUnit 5 tests (`./gradlew test`).
+The `core` package has no IntelliJ dependencies and is covered by plain JUnit tests.
+The synchronization of the IDE's SDK table is covered by platform tests, which run a headless IDE against a fake SDKMAN directory.
+Both run with `./gradlew test`; CI also runs them weekly against the newest IntelliJ EAP.
 
 [docs/diagnosing-freezes.md](docs/diagnosing-freezes.md) describes how to investigate freeze reports.
 
@@ -143,7 +145,6 @@ CI runs it weekly on Linux and macOS, so changes on SDKMAN's side show up as a f
 - LTS versions from the SDKMAN State API instead of foojay, once it publishes them
 - Recover from interrupted SDKMAN downloads (a leftover partial download blocks every retry)
 - Windows support (SDKMAN via WSL/Git Bash)
-- Platform tests for the SDK table synchronization
 
 ## License
 
