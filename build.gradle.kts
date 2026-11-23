@@ -73,21 +73,27 @@ intellijPlatform {
 }
 
 tasks.test {
-    useJUnitPlatform {
-        excludeTags("contract")
-    }
+    useJUnitPlatform()
 }
 
-val contractTest by tasks.registering(Test::class) {
+// The contract tests check SDKMAN and the APIs behind `core`; they need no IDE, so they get a source set of their own,
+// away from the platform test framework.
+val contractTestSourceSet = sourceSets.create("contractTest") {
+    compileClasspath += sourceSets.main.get().output
+    runtimeClasspath += sourceSets.main.get().output
+}
+dependencies {
+    "contractTestImplementation"(kotlin("stdlib"))
+    "contractTestImplementation"(platform("org.junit:junit-bom:6.1.3"))
+    "contractTestImplementation"("org.junit.jupiter:junit-jupiter")
+    "contractTestRuntimeOnly"("org.junit.platform:junit-platform-launcher")
+}
+tasks.register<Test>("contractTest") {
     description = "Checks the real SDKMAN CLI and APIs; installs a JDK, so it needs SDKMAN_CONTRACT=true."
     group = "verification"
-    testClassesDirs = tasks.test.get().testClassesDirs
-    classpath = tasks.test.get().classpath
-    // The platform test framework needs the JVM the IDE runs on, not the one Gradle runs on.
-    javaLauncher = tasks.test.flatMap { it.javaLauncher }
-    useJUnitPlatform {
-        includeTags("contract")
-    }
+    testClassesDirs = contractTestSourceSet.output.classesDirs
+    classpath = contractTestSourceSet.runtimeClasspath
+    useJUnitPlatform()
     outputs.upToDateWhen { false }
 }
 
