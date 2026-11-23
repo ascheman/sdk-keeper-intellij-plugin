@@ -1,5 +1,11 @@
 # Changelog
 
+## [Unreleased]
+
+### Changed
+
+- A sync no longer touches the disk on the UI thread: creating SDKs and checking their homes happens in the background, so a slow or unplugged disk cannot freeze the IDE
+
 ## [0.1.0] - 2026-11-22
 
 ### Added

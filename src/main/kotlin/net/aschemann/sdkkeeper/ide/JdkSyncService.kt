@@ -6,6 +6,7 @@ import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.application.EDT
 import com.intellij.openapi.application.PathManager
 import com.intellij.openapi.application.WriteAction
+import com.intellij.openapi.application.readAction
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger
 import com.intellij.openapi.module.Module
@@ -136,10 +137,12 @@ class JdkSyncService(private val cs: CoroutineScope) {
         // SDKMAN first: on equal ids, the SDKMAN installation wins. JDKs for another architecture
         // (Intel JDKs on Apple silicon) are never chosen.
         val osArch = System.getProperty("os.arch")
-        val homes = (sdkman.installedJava().mapNotNull { id -> sdkman.javaHome(id)?.let { id to it } } + others.map { it.id to it.home })
-            .filter { (_, home) -> JdkRelease.of(home)?.runsNativelyOn(osArch) != false }
-            .distinctBy { it.first }
-            .toMap()
+        val homes = withContext(Dispatchers.IO) {
+            (sdkman.installedJava().mapNotNull { id -> sdkman.javaHome(id)?.let { id to it } } + others.map { it.id to it.home })
+                .filter { (_, home) -> JdkRelease.of(home)?.runsNativelyOn(osArch) != false }
+                .distinctBy { it.first }
+                .toMap()
+        }
         val best = newestInstalledPerMajor(homes.keys, majors, settings.vendors)
             .mapValues { (_, id) -> id to homes.getValue(id).toString() }
 
@@ -150,7 +153,10 @@ class JdkSyncService(private val cs: CoroutineScope) {
             changes += withContext(Dispatchers.IO) { syncOutsideIde(best, settings) }
         }
         if (settings.state.manageSdkTable && best.isNotEmpty()) {
-            val result = withContext(Dispatchers.EDT) { syncSdkTable(best, sdkman, others.map { it.home }.toSet(), settings) }
+            // Everything that touches the disk (JDK version detection, class roots, symlinks, dead homes)
+            // happens here; the EDT only applies the prepared changes to the SDK table.
+            val plan = withContext(Dispatchers.IO) { planSdkTable(best, sdkman, others.map { it.home }.toSet(), settings) }
+            val result = withContext(Dispatchers.EDT) { applySdkTable(plan, settings) }
             changes += result.changes
             removed = result.removed
             invalid = result.invalid
@@ -271,86 +277,115 @@ class JdkSyncService(private val cs: CoroutineScope) {
 
     private fun restoreAndKeep(sdks: List<RemovedSdk>) {
         SyncSettings.get().keepSdks(sdks.map { it.name })
-        ApplicationManager.getApplication().invokeLater {
-            syncing.set(true)
-            try {
-                WriteAction.run<RuntimeException> {
-                    val table = ProjectJdkTable.getInstance()
-                    for (sdk in sdks) {
-                        val home = sdk.home ?: continue
-                        if (table.findJdk(sdk.name) == null) table.addJdk(JavaSdk.getInstance().createJdk(sdk.name, home, false))
+        cs.launch {
+            val created = withContext(Dispatchers.IO) {
+                sdks.mapNotNull { sdk -> sdk.home?.let { JavaSdk.getInstance().createJdk(sdk.name, it, false) } }
+            }
+            withContext(Dispatchers.EDT) {
+                syncing.set(true)
+                try {
+                    WriteAction.run<RuntimeException> {
+                        val table = ProjectJdkTable.getInstance()
+                        for (sdk in created) {
+                            if (table.findJdk(sdk.name) == null) table.addJdk(sdk)
+                        }
                     }
+                } finally {
+                    syncing.set(false)
                 }
-            } finally {
-                syncing.set(false)
             }
         }
     }
 
-    private fun syncSdkTable(
+    /** A managed SDK: [created] is null if the existing SDK already points to [home]. */
+    private class ManagedEntry(val major: Int, val id: JavaVersionId, val home: String, val created: Sdk?)
+
+    /** An SDK the cleanup may remove, with everything that needs the disk already looked up. */
+    private class PruneCandidate(val sdk: Sdk, val major: Int?, val homeExists: Boolean)
+
+    private class SdkTablePlan(val managed: List<ManagedEntry>, val candidates: List<PruneCandidate>)
+
+    /** Runs in the background: creating an SDK detects its version and scans its class roots. */
+    private suspend fun planSdkTable(
         best: Map<Int, Pair<JavaVersionId, String>>,
         sdkman: SdkmanInstallation,
         otherHomes: Set<Path>,
         settings: SyncSettings,
-    ): SdkTableResult {
+    ): SdkTablePlan {
+        val excluded = settings.excludedMajors
+        val jdks = readAction { ProjectJdkTable.getInstance().allJdks.toList() }
+        val javaSdk = JavaSdk.getInstance()
+        val managed = best.filterKeys { it !in excluded }.map { (major, entry) ->
+            val (id, home) = entry
+            val name = major.toString()
+            val existing = jdks.firstOrNull { it.name == name }
+            val upToDate = existing != null && existing.sdkType is JavaSdk && existing.homePath == home
+            ManagedEntry(major, id, home, if (upToDate) null else javaSdk.createJdk(name, home, false))
+        }
+        val candidates = if (settings.state.pruneUnmanaged) {
+            val managedNames = managed.map { it.major.toString() }.toSet()
+            val keep = settings.keptSdks + excluded.map { it.toString() }
+            jdks.filter {
+                it.sdkType is JavaSdk && it.name !in managedNames && !isOtherJdk(it.homePath, otherHomes) &&
+                    SdkPruning.shouldRemove(it.name, it.homePath, keep, sdkman.javaCandidates, settings.state.pruneOutsideSdkman)
+            }.map { PruneCandidate(it, javaMajorFromVersionString(it.versionString), homeExists(it.homePath)) }
+        } else {
+            emptyList()
+        }
+        return SdkTablePlan(managed, candidates)
+    }
+
+    /** Runs on the EDT: only changes the SDK table and project settings, no disk access. */
+    private fun applySdkTable(plan: SdkTablePlan, settings: SyncSettings): SdkTableResult {
         val changes = mutableListOf<String>()
         val removed = mutableListOf<RemovedSdk>()
         val invalid = mutableListOf<InvalidSdk>()
-        val excluded = settings.excludedMajors
         syncing.set(true)
         try {
             WriteAction.run<RuntimeException> {
                 val table = ProjectJdkTable.getInstance()
-                val javaSdk = JavaSdk.getInstance()
                 val managed = mutableMapOf<Int, Sdk>()
 
-                for ((major, entry) in best) {
-                    if (major in excluded) continue
-                    val (id, home) = entry
-                    val name = major.toString()
+                for (entry in plan.managed) {
+                    val name = entry.major.toString()
                     val existing = table.findJdk(name)
-                    if (existing != null && existing.sdkType is JavaSdk && existing.homePath == home) {
-                        managed[major] = existing
+                    if (existing != null && existing.sdkType is JavaSdk && existing.homePath == entry.home) {
+                        managed[entry.major] = existing
                         continue
                     }
-                    val created = javaSdk.createJdk(name, home, false)
+                    // The table changed since planning; the next sync catches up.
+                    val created = entry.created ?: continue
                     if (existing != null && existing.sdkType is JavaSdk) {
                         table.updateJdk(existing, created)
-                        managed[major] = existing
-                        changes += "Java $major → ${id.identifier}"
+                        managed[entry.major] = existing
+                        changes += "Java ${entry.major} → ${entry.id.identifier}"
                     } else {
                         existing?.let { table.removeJdk(it) }
                         table.addJdk(created)
-                        managed[major] = created
-                        changes += "Java $major added (${id.identifier})"
+                        managed[entry.major] = created
+                        changes += "Java ${entry.major} added (${entry.id.identifier})"
                     }
                 }
 
-                if (settings.state.pruneUnmanaged) {
-                    val managedSet = managed.values.toSet()
-                    val keep = settings.keptSdks + excluded.map { it.toString() }
-                    val unmanaged = table.allJdks.filter {
-                        it.sdkType is JavaSdk && it !in managedSet && !isOtherJdk(it.homePath, otherHomes) &&
-                            SdkPruning.shouldRemove(it.name, it.homePath, keep, sdkman.javaCandidates, settings.state.pruneOutsideSdkman)
-                    }
-                    for (sdk in unmanaged) {
-                        val major = javaMajorFromVersionString(sdk.versionString)
-                        val replacement = SdkPruning.automaticReplacement(major, managed.keys)?.let { managed[it] }
-                        if (replacement != null) {
-                            remapProjects(sdk, replacement).forEach { changes += "$it: ${sdk.name} → ${replacement.name}" }
-                        } else {
-                            val users = projectsUsing(sdk).map { it.name }
-                            if (users.isNotEmpty()) {
-                                if (!homeExists(sdk.homePath)) {
-                                    val suggestion = SdkPruning.suggestedReplacement(major, managed.keys)?.let { managed[it]?.name }
-                                    invalid += InvalidSdk(sdk.name, users, suggestion)
-                                }
-                                continue
+                val present = table.allJdks.toSet()
+                for (candidate in plan.candidates) {
+                    val sdk = candidate.sdk
+                    if (sdk !in present || sdk in managed.values) continue
+                    val replacement = SdkPruning.automaticReplacement(candidate.major, managed.keys)?.let { managed[it] }
+                    if (replacement != null) {
+                        remapProjects(sdk, replacement).forEach { changes += "$it: ${sdk.name} → ${replacement.name}" }
+                    } else {
+                        val users = projectsUsing(sdk).map { it.name }
+                        if (users.isNotEmpty()) {
+                            if (!candidate.homeExists) {
+                                val suggestion = SdkPruning.suggestedReplacement(candidate.major, managed.keys)?.let { managed[it]?.name }
+                                invalid += InvalidSdk(sdk.name, users, suggestion)
                             }
+                            continue
                         }
-                        removed += RemovedSdk(sdk.name, sdk.homePath)
-                        table.removeJdk(sdk)
                     }
+                    removed += RemovedSdk(sdk.name, sdk.homePath)
+                    table.removeJdk(sdk)
                 }
 
                 val defaultMajor = settings.state.defaultMajor?.trim()?.toIntOrNull() ?: managed.keys.maxOrNull()
