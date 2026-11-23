@@ -9,9 +9,6 @@ updates:
     schedule:
       interval: weekly
     ignore:
-      # Stay on JUnit 5 for now.
-      - dependency-name: org.junit:junit-bom
-        update-types: [version-update:semver-major]
       # Stay on Gradle 9; minor and patch releases still come in.
       - dependency-name: gradle-wrapper
         update-types: [version-update:semver-major]
