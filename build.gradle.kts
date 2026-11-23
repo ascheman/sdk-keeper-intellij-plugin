@@ -15,6 +15,7 @@ repositories {
     mavenCentral()
     intellijPlatform {
         defaultRepositories()
+        snapshots()
     }
 }
 
@@ -24,10 +25,12 @@ dependencies {
         if (localPath.isPresent) {
             local(localPath)
         } else {
-            create(
-                IntelliJPlatformType.fromCode(providers.gradleProperty("platformType").get()),
-                providers.gradleProperty("platformVersion").get(),
-            )
+            create {
+                type = IntelliJPlatformType.fromCode(providers.gradleProperty("platformType").get())
+                version = providers.gradleProperty("platformVersion")
+                // EAP snapshots (e.g. LATEST-EAP-SNAPSHOT) only exist as Maven artifacts, not as installers.
+                useInstaller = providers.gradleProperty("platformUseInstaller").map { it.toBoolean() }.orElse(true)
+            }
         }
         bundledPlugin("com.intellij.java")
         testFramework(TestFrameworkType.Platform)

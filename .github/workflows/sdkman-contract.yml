@@ -75,6 +75,8 @@ jobs:
       - uses: gradle/actions/setup-gradle@v6
       - name: Verify against the newest IntelliJ EAP
         run: ./gradlew verifyPlugin -PverifyEap
+      - name: Run the tests against the newest IntelliJ EAP
+        run: ./gradlew test -PplatformVersion=LATEST-EAP-SNAPSHOT -PplatformUseInstaller=false
 
   record:
     needs: contract
