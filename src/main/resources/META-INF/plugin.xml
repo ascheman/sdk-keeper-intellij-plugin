@@ -37,6 +37,8 @@
         <applicationConfigurable parentId="tools" instance="net.aschemann.sdkkeeper.ide.SyncSettingsConfigurable"
                                  id="net.aschemann.sdk-keeper" displayName="SDK Keeper"/>
         <notificationGroup id="SDK Keeper" displayType="BALLOON"/>
+        <!-- Exceptions and UI freezes users choose to report show up on the plugin's Marketplace page. -->
+        <errorHandler implementation="com.intellij.diagnostic.JetBrainsMarketplaceErrorReportSubmitter"/>
     </extensions>
 
     <actions>

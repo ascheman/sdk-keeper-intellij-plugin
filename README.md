@@ -107,6 +107,7 @@ If the IDE misbehaves after installing or updating the plugin:
   The plugin never deletes JDKs.
 
 Errors during a sync or on project startup are written to `idea.log` (*Help | Show Log*), they never block the IDE.
+If the IDE freezes or shows an error caused by SDK Keeper, please send the report from the IDE's error dialog (*Report to third-party plugin*); it reaches the plugin's author via the Marketplace.
 CI verifies the plugin against current IDE releases and, weekly, against the newest EAP.
 
 ## Building
@@ -123,6 +124,8 @@ The plugin ZIP ends up in `build/distributions/`; install it via *Settings | Plu
 `./gradlew runIde` starts a sandbox IDE with the plugin.
 
 The `core` package has no IntelliJ dependencies and is covered by plain JUnit 5 tests (`./gradlew test`).
+
+[docs/diagnosing-freezes.md](docs/diagnosing-freezes.md) describes how to investigate freeze reports.
 
 `SDKMAN_CONTRACT=true ./gradlew contractTest` checks the real SDKMAN CLI and the SDKMAN and foojay APIs the plugin relies on, as a compatibility check on our side.
 It installs the newest Temurin LTS into `$SDKMAN_DIR` if it is missing.

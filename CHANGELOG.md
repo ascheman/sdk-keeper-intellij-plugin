@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Added
+
+- Exceptions and UI freezes can be reported to the plugin's author from the IDE's error dialog (JetBrains Marketplace error reporting)
+
 ### Changed
 
 - A sync no longer touches the disk on the UI thread: creating SDKs and checking their homes happens in the background, so a slow or unplugged disk cannot freeze the IDE
