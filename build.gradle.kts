@@ -83,6 +83,8 @@ val contractTest by tasks.registering(Test::class) {
     group = "verification"
     testClassesDirs = tasks.test.get().testClassesDirs
     classpath = tasks.test.get().classpath
+    // The platform test framework needs the JVM the IDE runs on, not the one Gradle runs on.
+    javaLauncher = tasks.test.flatMap { it.javaLauncher }
     useJUnitPlatform {
         includeTags("contract")
     }
