@@ -21,12 +21,12 @@ jobs:
         os: [ubuntu-latest, macos-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       # The SDKMAN installer needs Bash 4+, macOS ships 3.2. The plugin itself keeps using
       # /bin/bash, so the check also covers SDKMAN on the macOS system Bash.
       - name: Install Bash 4+ for the SDKMAN installer
@@ -56,7 +56,7 @@ jobs:
             echo "result: ${{ steps.check.outcome }}"
           } > "observations/$RUNNER_OS.txt"
           cat "observations/$RUNNER_OS.txt"
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: contract-${{ runner.os }}
@@ -67,12 +67,12 @@ jobs:
   intellij-eap:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/setup-java@v5
+      - uses: actions/checkout@v7
+      - uses: actions/setup-java@v6
         with:
           distribution: temurin
           java-version: 21
-      - uses: gradle/actions/setup-gradle@v4
+      - uses: gradle/actions/setup-gradle@v6
       - name: Verify against the newest IntelliJ EAP
         run: ./gradlew verifyPlugin -PverifyEap
 
@@ -84,8 +84,8 @@ jobs:
       contents: write
       actions: write
     steps:
-      - uses: actions/checkout@v5
-      - uses: actions/download-artifact@v5
+      - uses: actions/checkout@v7
+      - uses: actions/download-artifact@v8
         with:
           pattern: contract-*
           merge-multiple: true
