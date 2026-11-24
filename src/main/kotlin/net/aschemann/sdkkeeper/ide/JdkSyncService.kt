@@ -328,12 +328,17 @@ class JdkSyncService(private val cs: CoroutineScope) {
             jdks.filter {
                 it.sdkType is JavaSdk && it.name !in managedNames && !isOtherJdk(it.homePath, otherHomes) &&
                     SdkPruning.shouldRemove(it.name, it.homePath, keep, sdkman.javaCandidates, settings.state.pruneOutsideSdkman)
-            }.map { PruneCandidate(it, javaMajorFromVersionString(it.versionString), homeExists(it.homePath)) }
+            }.map { PruneCandidate(it, majorOf(it), homeExists(it.homePath)) }
         } else {
             emptyList()
         }
         return SdkTablePlan(managed, candidates)
     }
+
+    /** The SDK's Java version; an entry without one (written by hand or by another tool) gets it from its `release` file. */
+    private fun majorOf(sdk: Sdk): Int? =
+        javaMajorFromVersionString(sdk.versionString)
+            ?: sdk.homePath?.let { home -> runCatching { JdkRelease.of(Path.of(home))?.major }.getOrNull() }
 
     /** Runs on the EDT: only changes the SDK table and project settings, no disk access. */
     private fun applySdkTable(plan: SdkTablePlan, settings: SyncSettings): SdkTableResult {

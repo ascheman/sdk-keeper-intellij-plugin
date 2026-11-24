@@ -10,6 +10,10 @@
 
 - A sync no longer touches the disk on the UI thread: creating SDKs and checking their homes happens in the background, so a slow or unplugged disk cannot freeze the IDE
 
+### Fixed
+
+- An SDK entry without a version (written by hand or by another tool) gets its Java version from the JDK's `release` file, so projects using it move to the managed SDK of that version instead of keeping the duplicate
+
 ## [0.1.0] - 2026-11-22
 
 ### Added

@@ -176,6 +176,26 @@ class JdkSyncServiceTest {
     }
 
     @Test
+    fun `reads the version of an SDK without one from its release file`() {
+        jdk("17.0.21-tem", "17.0.21")
+        addSdk("temurin-17", home("17.0.21-tem"))
+        // An SDK entry written by hand or by another tool may lack the version.
+        onEdtWrite {
+            ProjectJdkTable.getInstance().findJdk("temurin-17")!!.sdkModificator.apply {
+                versionString = null
+                commitChanges()
+            }
+        }
+        val project = projectFixture.get()
+        setProjectSdk(project, "temurin-17")
+        SyncSettings.get().state.pruneUnmanaged = true
+
+        sync()
+        assertEquals("17", ProjectRootManager.getInstance(project).projectSdkName)
+        assertFalse("temurin-17" in javaSdks())
+    }
+
+    @Test
     fun `keeps a dead SDK a project still uses and warns about it`() {
         jdk("17.0.21-tem", "17.0.21")
         jdk("21.0.10-tem", "21.0.10")
