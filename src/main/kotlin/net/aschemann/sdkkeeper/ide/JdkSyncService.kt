@@ -149,9 +149,7 @@ class JdkSyncService(private val cs: CoroutineScope) {
         val changes = mutableListOf<String>()
         var removed = emptyList<RemovedSdk>()
         var invalid = emptyList<InvalidSdk>()
-        if (best.isNotEmpty()) {
-            changes += withContext(Dispatchers.IO) { syncOutsideIde(best, settings) }
-        }
+        val outsideIde = if (best.isNotEmpty()) withContext(Dispatchers.IO) { syncOutsideIde(best, settings) } else emptyList()
         if (settings.state.manageSdkTable && best.isNotEmpty()) {
             // Everything that touches the disk (JDK version detection, class roots, symlinks, dead homes)
             // happens here; the EDT only applies the prepared changes to the SDK table.
@@ -161,6 +159,8 @@ class JdkSyncService(private val cs: CoroutineScope) {
             removed = result.removed
             invalid = result.invalid
         }
+        // The SDK table first: it is what the user sees in the IDE; symlinks and toolchains.xml follow.
+        changes += outsideIde.map(::withTilde)
         if (changes.isNotEmpty()) {
             Notifier.notify(null, "Java SDKs updated", changes.joinToString("<br>"), NotificationType.INFORMATION)
         }
@@ -204,6 +204,9 @@ class JdkSyncService(private val cs: CoroutineScope) {
         }
         return changes
     }
+
+    /** Shortens paths in the user's home directory, as a shell would show them. */
+    private fun withTilde(text: String): String = text.replace(System.getProperty("user.home") + "/", "~/")
 
     private data class RemovedSdk(val name: String, val home: String?)
 

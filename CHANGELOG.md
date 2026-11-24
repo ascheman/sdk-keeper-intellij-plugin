@@ -9,6 +9,7 @@
 ### Changed
 
 - A sync no longer touches the disk on the UI thread: creating SDKs and checking their homes happens in the background, so a slow or unplugged disk cannot freeze the IDE
+- "Java SDKs updated" lists the changes to the SDK list first, then symlinks and `toolchains.xml`, with paths in the home directory shortened to `~`
 
 ### Fixed
 

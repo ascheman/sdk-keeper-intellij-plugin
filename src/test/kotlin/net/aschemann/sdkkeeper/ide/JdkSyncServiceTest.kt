@@ -85,10 +85,10 @@ class JdkSyncServiceTest {
         val links = tmp.resolve("links")
         assertEquals(
             listOf(
-                "$links/11 -> ${home("11.0.30-tem")}",
-                "$links/17 -> ${home("17.0.21-tem")}",
                 "Java 11 added (11.0.30-tem)",
                 "Java 17 added (17.0.21-tem)",
+                "$links/11 -> ${home("11.0.30-tem")}",
+                "$links/17 -> ${home("17.0.21-tem")}",
             ),
             contents().single().split("<br>"),
         )
