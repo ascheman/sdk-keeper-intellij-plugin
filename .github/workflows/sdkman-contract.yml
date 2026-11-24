@@ -80,7 +80,7 @@ jobs:
 
   record:
     needs: contract
-    if: always()
+    if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     permissions:
       contents: write
