@@ -128,6 +128,7 @@ The synchronization of the IDE's SDK table is covered by platform tests, which r
 Both run with `./gradlew test`; CI also runs them weekly against the newest IntelliJ EAP.
 
 [docs/diagnosing-freezes.md](docs/diagnosing-freezes.md) describes how to investigate freeze reports.
+`./scripts/marketplace-media.sh` takes the Marketplace screenshots in a Linux container; see [docs/marketplace-media.md](docs/marketplace-media.md).
 
 `SDKMAN_CONTRACT=true ./gradlew contractTest` checks the real SDKMAN CLI and the SDKMAN and foojay APIs the plugin relies on, as a compatibility check on our side.
 It installs the newest Temurin LTS into `$SDKMAN_DIR` if it is missing.
