@@ -58,6 +58,10 @@ intellijPlatform {
             untilBuild = provider { null }
         }
     }
+    publishing {
+        // scripts/publish.sh reads the token from the macOS Keychain; it never lives in the repository.
+        token = providers.environmentVariable("PUBLISH_TOKEN")
+    }
     pluginVerification {
         ides {
             if (providers.gradleProperty("verifyEap").isPresent) {
